@@ -44,6 +44,7 @@
 package digest
 
 import (
+	"bytes"
 	"crypto/md5"
 	"crypto/rand"
 	"errors"
@@ -240,6 +241,13 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 		req2.Header[k] = s
 	}
 
+	if req.Body != http.NoBody {
+		buf, _ := io.ReadAll(req.Body)
+		rdr1 := io.NopCloser(bytes.NewBuffer(buf))
+		rdr2 := io.NopCloser(bytes.NewBuffer(buf))
+		req.Body = rdr1
+		req2.Body = rdr2
+	}
 	// Make a request to get the 401 that contains the challenge.
 	resp, err := t.Transport.RoundTrip(req)
 	if err != nil || resp.StatusCode != 401 {
